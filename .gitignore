@@ -1,0 +1,10 @@
+node_modules/
+coverage/
+*.log
+.DS_Store
+.env
+.env.*
+!.env.example
+.n8nsyncrc.local.json
+/backups/
+/tmp/

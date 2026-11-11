@@ -1,0 +1,74 @@
+{
+  "name": "Error notifier",
+  "active": true,
+  "nodes": [
+    {
+      "id": "c3f0c003-0000-4000-8000-000000000001",
+      "name": "On workflow error",
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [240, 300],
+      "parameters": {}
+    },
+    {
+      "id": "c3f0c003-0000-4000-8000-000000000002",
+      "name": "Format alert",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [480, 300],
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            { "id": "f1", "name": "text", "type": "string", "value": "=Workflow \"{{ $json.workflow.name }}\" failed: {{ $json.execution.error.message }}" },
+            { "id": "f2", "name": "link", "type": "string", "value": "={{ $json.execution.url }}" }
+          ]
+        }
+      }
+    },
+    {
+      "id": "c3f0c003-0000-4000-8000-000000000003",
+      "name": "Post to alert channel",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [720, 300],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000,
+      "parameters": {
+        "method": "POST",
+        "url": "https://chat.example.com/hooks/alerts",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            { "name": "text", "value": "={{ $json.text }}" },
+            { "name": "link", "value": "={{ $json.link }}" }
+          ]
+        },
+        "options": { "timeout": 10000 }
+      },
+      "credentials": {
+        "httpHeaderAuth": { "id": "5", "name": "Chat alerts webhook" }
+      }
+    },
+    {
+      "id": "c3f0c003-0000-4000-8000-000000000004",
+      "name": "About this workflow",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [200, 60],
+      "parameters": {
+        "width": 520,
+        "height": 160,
+        "content": "## Error notifier\nSet this workflow as the error workflow of every other workflow. It posts a short alert with a link to the failed execution."
+      }
+    }
+  ],
+  "connections": {
+    "On workflow error": { "main": [[{ "node": "Format alert", "type": "main", "index": 0 }]] },
+    "Format alert": { "main": [[{ "node": "Post to alert channel", "type": "main", "index": 0 }]] }
+  },
+  "settings": { "executionOrder": "v1" },
+  "tags": [{ "name": "monitoring" }, { "name": "example" }]
+}

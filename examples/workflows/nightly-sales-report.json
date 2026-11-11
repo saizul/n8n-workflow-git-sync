@@ -1,0 +1,88 @@
+{
+  "name": "Nightly sales report",
+  "active": false,
+  "nodes": [
+    {
+      "id": "b2f0c002-0000-4000-8000-000000000001",
+      "name": "Every night at 02:00",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [240, 300],
+      "parameters": {
+        "rule": { "interval": [{ "field": "cronExpression", "expression": "0 2 * * *" }] }
+      }
+    },
+    {
+      "id": "b2f0c002-0000-4000-8000-000000000002",
+      "name": "Fetch yesterday's orders",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [480, 300],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000,
+      "parameters": {
+        "method": "GET",
+        "url": "https://shop.example.com/api/orders",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [{ "name": "since", "value": "={{ $now.minus({ days: 1 }).toISODate() }}" }]
+        },
+        "options": { "timeout": 30000 }
+      },
+      "credentials": {
+        "httpHeaderAuth": { "id": "3", "name": "Shop API" }
+      }
+    },
+    {
+      "id": "b2f0c002-0000-4000-8000-000000000003",
+      "name": "Summarise totals",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [720, 300],
+      "parameters": {
+        "jsCode": "const orders = $input.all().map((item) => item.json);\nconst total = orders.reduce((sum, order) => sum + Number(order.total ?? 0), 0);\nreturn [{ json: { count: orders.length, total } }];"
+      }
+    },
+    {
+      "id": "b2f0c002-0000-4000-8000-000000000004",
+      "name": "Email the report",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [960, 300],
+      "retryOnFail": true,
+      "maxTries": 2,
+      "parameters": {
+        "fromEmail": "reports@example.com",
+        "toEmail": "sales@example.com",
+        "subject": "=Sales report for {{ $now.minus({ days: 1 }).toISODate() }}",
+        "emailFormat": "text",
+        "text": "={{ $json.count }} orders, {{ $json.total }} in revenue."
+      },
+      "credentials": {
+        "smtp": { "id": "4", "name": "Example SMTP" }
+      }
+    },
+    {
+      "id": "b2f0c002-0000-4000-8000-000000000005",
+      "name": "About this workflow",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [200, 60],
+      "parameters": {
+        "width": 520,
+        "height": 160,
+        "content": "## Nightly sales report\nCollects the previous day's orders from the fictional shop API and emails a two-line summary to the sales team."
+      }
+    }
+  ],
+  "connections": {
+    "Every night at 02:00": { "main": [[{ "node": "Fetch yesterday's orders", "type": "main", "index": 0 }]] },
+    "Fetch yesterday's orders": { "main": [[{ "node": "Summarise totals", "type": "main", "index": 0 }]] },
+    "Summarise totals": { "main": [[{ "node": "Email the report", "type": "main", "index": 0 }]] }
+  },
+  "settings": { "executionOrder": "v1", "errorWorkflow": "REPLACE_WITH_ERROR_WORKFLOW_ID", "timezone": "Europe/Berlin" },
+  "tags": [{ "name": "reporting" }, { "name": "example" }]
+}

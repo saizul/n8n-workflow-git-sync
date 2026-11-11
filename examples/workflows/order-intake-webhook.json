@@ -1,0 +1,126 @@
+{
+  "name": "Order intake webhook",
+  "active": true,
+  "nodes": [
+    {
+      "id": "a1f0c001-0000-4000-8000-000000000001",
+      "name": "Receive order",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [240, 300],
+      "webhookId": "00000000-0000-4000-8000-000000000101",
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "orders",
+        "authentication": "headerAuth",
+        "responseMode": "responseNode"
+      },
+      "credentials": {
+        "httpHeaderAuth": { "id": "1", "name": "Shop webhook header" }
+      }
+    },
+    {
+      "id": "a1f0c001-0000-4000-8000-000000000002",
+      "name": "Look up customer",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [480, 300],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000,
+      "parameters": {
+        "method": "GET",
+        "url": "=https://crm.example.com/api/customers/{{ $json.body.customerId }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": { "timeout": 10000 }
+      },
+      "credentials": {
+        "httpHeaderAuth": { "id": "2", "name": "CRM API" }
+      }
+    },
+    {
+      "id": "a1f0c001-0000-4000-8000-000000000003",
+      "name": "Is known customer",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [720, 300],
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": true, "typeValidation": "strict" },
+          "combinator": "and",
+          "conditions": [
+            {
+              "leftValue": "={{ $json.id }}",
+              "rightValue": "",
+              "operator": { "type": "string", "operation": "notEmpty", "singleValue": true }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "a1f0c001-0000-4000-8000-000000000004",
+      "name": "Build order record",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [960, 200],
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            { "id": "f1", "name": "customerId", "type": "string", "value": "={{ $json.id }}" },
+            { "id": "f2", "name": "status", "type": "string", "value": "accepted" }
+          ]
+        }
+      }
+    },
+    {
+      "id": "a1f0c001-0000-4000-8000-000000000005",
+      "name": "Build rejection",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [960, 400],
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            { "id": "f1", "name": "status", "type": "string", "value": "unknown-customer" }
+          ]
+        }
+      }
+    },
+    {
+      "id": "a1f0c001-0000-4000-8000-000000000006",
+      "name": "Respond to shop",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [1200, 300],
+      "parameters": { "respondWith": "json", "responseBody": "={{ $json }}" }
+    },
+    {
+      "id": "a1f0c001-0000-4000-8000-000000000007",
+      "name": "About this workflow",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [200, 60],
+      "parameters": {
+        "width": 520,
+        "height": 180,
+        "content": "## Order intake\nReceives orders from the fictional shop at shop.example.com, checks the customer in the CRM and answers with the outcome.\n\nOwner: operations@example.com"
+      }
+    }
+  ],
+  "connections": {
+    "Receive order": { "main": [[{ "node": "Look up customer", "type": "main", "index": 0 }]] },
+    "Look up customer": { "main": [[{ "node": "Is known customer", "type": "main", "index": 0 }]] },
+    "Is known customer": {
+      "main": [
+        [{ "node": "Build order record", "type": "main", "index": 0 }],
+        [{ "node": "Build rejection", "type": "main", "index": 0 }]
+      ]
+    },
+    "Build order record": { "main": [[{ "node": "Respond to shop", "type": "main", "index": 0 }]] },
+    "Build rejection": { "main": [[{ "node": "Respond to shop", "type": "main", "index": 0 }]] }
+  },
+  "settings": { "executionOrder": "v1", "errorWorkflow": "REPLACE_WITH_ERROR_WORKFLOW_ID" },
+  "tags": [{ "name": "orders" }, { "name": "example" }]
+}

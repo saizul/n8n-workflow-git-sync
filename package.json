@@ -1,0 +1,32 @@
+{
+  "name": "n8n-workflow-git-sync",
+  "version": "0.1.0",
+  "description": "Keep self-hosted n8n workflows under version control: pull, push, diff, lint, redact, validate, graph, docs, backup and restore via the n8n public REST API.",
+  "type": "module",
+  "license": "MIT",
+  "author": "Saizul Amin",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/saizul/n8n-workflow-git-sync.git"
+  },
+  "bugs": {
+    "url": "https://github.com/saizul/n8n-workflow-git-sync/issues"
+  },
+  "homepage": "https://github.com/saizul/n8n-workflow-git-sync#readme",
+  "keywords": ["n8n", "workflow", "git", "sync", "backup", "lint", "diff", "cli", "gitops"],
+  "bin": {
+    "n8n-sync": "bin/n8n-sync.js"
+  },
+  "main": "src/index.js",
+  "exports": {
+    ".": "./src/index.js"
+  },
+  "files": ["bin", "src", "README.md", "CHANGELOG.md", "LICENSE"],
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "test": "node --test \"test/**/*.test.js\"",
+    "lint:examples": "node bin/n8n-sync.js lint examples/workflows"
+  }
+}

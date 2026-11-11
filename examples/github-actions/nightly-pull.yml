@@ -1,0 +1,65 @@
+# Nightly export of every workflow on an n8n instance into this repository.
+#
+# Copy this file to .github/workflows/nightly-pull.yml in the repository that
+# holds your workflows, then add two repository secrets:
+#
+#   N8N_BASE_URL   e.g. https://n8n.example.com
+#   N8N_API_KEY    an n8n API key that can read workflows
+#
+# The job commits only when something actually changed, so the history shows
+# one commit per night in which a workflow was edited.
+name: Nightly n8n pull
+
+on:
+  schedule:
+    - cron: '17 1 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: n8n-nightly-pull
+  cancel-in-progress: false
+
+jobs:
+  pull:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install n8n-workflow-git-sync
+        run: npm install --global github:saizul/n8n-workflow-git-sync
+
+      - name: Pull workflows
+        env:
+          N8N_BASE_URL: ${{ secrets.N8N_BASE_URL }}
+          N8N_API_KEY: ${{ secrets.N8N_API_KEY }}
+        run: n8n-sync pull --dir workflows --prune
+
+      - name: Refuse to commit secrets
+        run: n8n-sync redact workflows --check
+
+      - name: Lint (annotates the run, does not block the backup)
+        continue-on-error: true
+        run: n8n-sync lint workflows --format github
+
+      - name: Refresh the workflow catalogue
+        run: n8n-sync docs workflows --output WORKFLOWS.md
+
+      - name: Commit changes
+        run: |
+          git config user.name "n8n-sync"
+          git config user.email "n8n-sync@users.noreply.github.com"
+          git add --all workflows WORKFLOWS.md
+          if git diff --cached --quiet; then
+            echo "No workflow changes."
+          else
+            git commit --message "chore(workflows): nightly pull $(date --utc +%Y-%m-%d)"
+            git push
+          fi

@@ -1,0 +1,41 @@
+{
+  "dir": "workflows",
+  "defaultEnvironment": "dev",
+  "environments": {
+    "dev": {
+      "baseUrl": "https://n8n-dev.example.com",
+      "apiKeyEnv": "N8N_DEV_API_KEY"
+    },
+    "prod": {
+      "baseUrl": "https://n8n.example.com",
+      "apiKeyEnv": "N8N_PROD_API_KEY",
+      "idMap": ".n8n-sync/prod.idmap.json",
+      "credentialMap": {
+        "CRM API": "CRM API (production)",
+        "Shop API": "Shop API (production)"
+      }
+    }
+  },
+  "pull": {
+    "stripVolatile": true,
+    "groupBy": "none"
+  },
+  "push": {
+    "activate": "keep"
+  },
+  "lint": {
+    "rules": {
+      "no-hardcoded-secrets": "error",
+      "webhook-authentication": "error",
+      "no-pinned-data": "error",
+      "missing-error-workflow": ["warning", { "onlyActive": true }],
+      "http-timeout-retry": ["warning", { "maxTimeoutMs": 60000 }],
+      "sticky-note-documentation": ["info", { "minNodes": 4 }],
+      "no-disabled-nodes": "off"
+    }
+  },
+  "backup": {
+    "dir": "backups",
+    "keep": 14
+  }
+}
