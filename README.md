@@ -450,3 +450,14 @@ See [CONTRIBUTING.md](CONTRIBUTING.md). Changes are listed in [CHANGELOG.md](CHA
 ## License
 
 [MIT](LICENSE). Copyright (c) 2026 Saizul Amin.
+
+## Install from GitHub Packages
+
+Releases are published as `@saizul/n8n-workflow-git-sync` on GitHub Packages:
+
+```bash
+echo "@saizul:registry=https://npm.pkg.github.com" >> .npmrc
+npm install @saizul/n8n-workflow-git-sync
+```
+
+GitHub Packages needs a personal access token with `read:packages` in your npm config to install.
