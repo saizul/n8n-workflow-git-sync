@@ -36,5 +36,8 @@ jobs:
       - name: Validate the example workflows
         run: node bin/n8n-sync.js validate examples/workflows --strict
 
+      - name: Map the example workflow dependencies
+        run: node bin/n8n-sync.js deps examples/workflows
+
       - name: Check the examples for secrets
         run: node bin/n8n-sync.js redact examples/workflows --check

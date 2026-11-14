@@ -31,7 +31,7 @@ test('no arguments prints usage and exits 2; --help exits 0', async (t) => {
   assert.match(bare.out, /Usage: n8n-sync <command>/);
   const help = await cli(['--help'], { cwd });
   assert.equal(help.code, 0);
-  for (const name of ['pull', 'push', 'diff', 'lint', 'validate', 'redact', 'graph', 'docs', 'backup', 'restore']) {
+  for (const name of ['pull', 'push', 'diff', 'lint', 'validate', 'redact', 'graph', 'docs', 'deps', 'backup', 'restore']) {
     assert.match(help.out, new RegExp(`\\n\\s+${name}\\s`), name);
   }
 });

@@ -38,6 +38,7 @@ backups.
 | `redact` | Finds hard-coded secrets in node parameters and masks or strips them. `--check` mode for CI. |
 | `validate` | Structural checks: required fields, node shape, dangling connections, duplicate ids. |
 | `graph` | Renders a workflow as a Mermaid flowchart or Graphviz DOT. |
+| `deps` | Maps sub-workflow calls and error workflow settings across all files: missing targets, call cycles, unreferenced sub-workflows, a dependency-first push order, Mermaid output. |
 | `docs` | Generates a Markdown catalogue of all workflows (triggers, nodes, credentials, tags, optional graphs). `--check` fails when the file is stale. |
 | `backup` / `restore` | Timestamped snapshot directories with a sha256 manifest, retention pruning, verification, and restore to a directory or back onto an instance. |
 
@@ -251,6 +252,50 @@ n8n-sync docs --output WORKFLOWS.md --graphs
 n8n-sync docs --output WORKFLOWS.md --graphs --check   # CI: fail when the file is stale
 ```
 
+### deps
+
+```sh
+n8n-sync deps                                    # references, findings and push order
+n8n-sync deps workflows --check                  # CI: exit 1 on missing workflows or call cycles
+n8n-sync deps --check --fail-on-unused           # ...and on sub-workflows nobody calls
+n8n-sync deps --workflow "Enrich customer"       # what it depends on and what uses it
+n8n-sync deps --format mermaid --output docs/dependencies.mmd
+n8n-sync deps --format json
+```
+
+Workflows reference each other in two ways: Execute Workflow nodes (and workflow tool nodes)
+that call a stored workflow, and `settings.errorWorkflow`. `deps` reads the local files only,
+needs no API access, and reports:
+
+- **Missing workflows:** a reference to an id that is not in the set, for example a
+  sub-workflow that was never pulled or a deleted error workflow.
+- **Call cycles:** sub-workflows that call each other (or themselves) in a loop.
+- **Unreferenced workflows:** sub-workflows whose only trigger is an Execute Workflow Trigger
+  and that nobody calls, and error-trigger workflows that no workflow uses.
+- **Push order:** every workflow after the workflows it references. When promoting with an
+  id map, pushing in this order (`n8n-sync push <name>` one at a time, or several passes)
+  means a referenced workflow already has a target id when its callers are pushed.
+
+Ids written as n8n expressions (`={{ ... }}`) cannot be resolved statically; they are listed
+as dynamic references and not checked. Nodes that load a workflow from a file, a parameter or
+a URL other than the instance are ignored. A workflow that is only reachable through a dynamic
+call may be listed as unreferenced. `--check` fails on missing workflows and call cycles;
+`--fail-on-unused` adds unreferenced workflows.
+
+```text
+References:
+  Order intake (101)
+    error workflow Error notifier (900)
+    calls Enrich customer (205) via node "Enrich"
+
+Push order (referenced workflows first):
+  1. Enrich customer (205)
+  2. Error notifier (900)
+  3. Order intake (101)
+
+3 workflows, 2 references, 0 missing, 0 cycles, 0 dynamic, 0 unreferenced
+```
+
 ### backup and restore
 
 ```sh
@@ -376,6 +421,7 @@ Checks that need no access to an instance, suitable for pull requests:
 - run: n8n-sync validate workflows --strict
 - run: n8n-sync redact workflows --check
 - run: n8n-sync lint workflows --format github
+- run: n8n-sync deps workflows --check
 - run: n8n-sync docs workflows --output WORKFLOWS.md --check
 ```
 
@@ -438,7 +484,7 @@ against your n8n version before relying on it: start with `pull`, `diff` and
 Everything the CLI does is exported from the package entry point:
 
 ```js
-import { createClient, pullWorkflows, lintWorkflow, diffWorkflows, toMermaid } from 'n8n-workflow-git-sync';
+import { createClient, pullWorkflows, lintWorkflow, diffWorkflows, toMermaid, buildDependencyGraph } from 'n8n-workflow-git-sync';
 ```
 
 The API follows the CLI closely but is not yet covered by a stability promise before 1.0.

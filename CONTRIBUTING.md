@@ -29,7 +29,7 @@ bin/n8n-sync.js        executable entry point
 src/cli.js             argument dispatch, exit codes, error reporting
 src/commands/          one module per command: options, help text, wiring
 src/sync/              pull, push, id and credential remapping
-src/workflow/          normalisation, file store, validation, graph, rendering
+src/workflow/          normalisation, file store, validation, graph, rendering, dependencies
 src/lint/              rule engine, formatters, rules/
 src/secrets/           secret detection and redaction
 src/diff/              semantic diff and its formatters

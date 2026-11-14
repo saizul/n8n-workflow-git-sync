@@ -26,7 +26,7 @@
     "node": ">=22"
   },
   "scripts": {
-    "test": "node --test \"test/**/*.test.js\"",
+    "test": "node --test test/*.test.js",
     "lint:examples": "node bin/n8n-sync.js lint examples/workflows"
   }
 }
