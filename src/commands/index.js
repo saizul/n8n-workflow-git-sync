@@ -1,4 +1,5 @@
 import { backupCommand } from './backup.js';
+import { depsCommand } from './deps.js';
 import { diffCommand } from './diff.js';
 import { docsCommand } from './docs.js';
 import { graphCommand } from './graph.js';
@@ -19,6 +20,7 @@ export const COMMANDS = Object.freeze([
   redactCommand,
   graphCommand,
   docsCommand,
+  depsCommand,
   backupCommand,
   restoreCommand,
 ]);

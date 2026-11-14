@@ -12,6 +12,9 @@ export { loadWorkflows, readManifest, writeManifest, readIdMap, writeIdMap, work
 export { validateWorkflow, isValid } from './workflow/validate.js';
 export { buildGraph, findCycles, findOrphans, findUnreachable } from './workflow/graph.js';
 export { toMermaid, toDot } from './workflow/render.js';
+export {
+  buildDependencyGraph, extractReferences, dependenciesToMermaid, reachable as reachableWorkflows, WORKFLOW_CALLER_TYPES,
+} from './workflow/dependencies.js';
 export { findSecrets, findWorkflowSecrets, maskSecret } from './secrets/detector.js';
 export { redactWorkflow, REDACTION_MARKER } from './secrets/redact.js';
 export { lintWorkflow, resolveRules, summarize, shouldFail } from './lint/engine.js';

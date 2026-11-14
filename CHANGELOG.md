@@ -7,6 +7,21 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+
+- `deps`: offline map of the references between workflows (Execute Workflow and workflow
+  tool nodes, `settings.errorWorkflow`), with plain ids, resource locators and workflow URLs
+  understood. Reports missing workflows, sub-workflow call cycles, unreferenced sub-workflows
+  and error workflows, expression-based references, and a push order with referenced
+  workflows first. `--workflow` focuses on one workflow's dependencies and dependents;
+  output as text, JSON or Mermaid; `--check` and `--fail-on-unused` for CI.
+- `buildDependencyGraph`, `extractReferences`, `dependenciesToMermaid`, `reachableWorkflows`
+  and `WORKFLOW_CALLER_TYPES` in the library API.
+
+### Changed
+
+- `npm test` passes the test files to `node --test` explicitly instead of a quoted glob.
+
 ## [0.1.0] - 2026-11-11
 
 Initial release.
